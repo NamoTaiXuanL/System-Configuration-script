@@ -1,0 +1,37 @@
+=== Git配置 ===
+是否要配置Git用户名和邮箱? (y/n, 默认y): y
+请输入Git用户名: TEST-WIN10
+请输入Git邮箱: 5nu12ts5b@mozmail.com
+Traceback (most recent call last):
+  File "C:\Users\root\Documents\TEST-SWITCH\System_Configuration\script\install_git.py", line 196, in <module>
+    success = main()
+  File "C:\Users\root\Documents\TEST-SWITCH\System_Configuration\script\install_git.py", line 180, in main
+    configure_git()
+    ~~~~~~~~~~~~~^^
+  File "C:\Users\root\Documents\TEST-SWITCH\System_Configuration\script\install_git.py", line 91, in configure_git
+    subprocess.run(['git', 'config', '--global', 'user.name', username], check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python314\Lib\subprocess.py", line 554, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python314\Lib\subprocess.py", line 1038, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python314\Lib\subprocess.py", line 1552, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                       ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+                             # no special security
+                             ^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+                             cwd,
+                             ^^^^
+                             startupinfo)
+                             ^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] 系统找不到指定的文件。
