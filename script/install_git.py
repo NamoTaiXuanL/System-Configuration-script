@@ -147,14 +147,37 @@ def generate_ssh_key():
 
 
 def setup_ssh_agent():
-    """设置SSH agent"""
+    """设置SSH agent - Windows专用版本"""
     try:
-        # 启动ssh-agent并添加密钥
-        subprocess.run(['ssh-agent', '-s'], check=True)
-        subprocess.run(['ssh-add', os.path.join(os.path.expanduser('~'), '.ssh', 'id_rsa')], check=True)
-        print("SSH agent设置完成")
+        # Windows系统通常使用OpenSSH自带的ssh-agent
+        # 首先尝试启动ssh-agent
+        result = subprocess.run(['ssh-agent', '-s'], capture_output=True, text=True, timeout=10)
+        
+        if result.returncode == 0:
+            # 解析ssh-agent的输出，设置环境变量
+            for line in result.stdout.split(';'):
+                if 'SSH_AUTH_SOCK' in line or 'SSH_AGENT_PID' in line:
+                    key, value = line.strip().split('=', 1)
+                    os.environ[key] = value
+            
+            # 添加密钥到agent
+            subprocess.run(['ssh-add', os.path.join(os.path.expanduser('~'), '.ssh', 'id_rsa')], 
+                         check=True, timeout=10)
+            print("SSH agent设置完成")
+        else:
+            # 如果ssh-agent启动失败，提供手动指导
+            print("SSH agent启动失败，Windows系统可能需要手动设置:")
+            print("1. 确保OpenSSH Authentication Agent服务已启用")
+            print("2. 运行: Get-Service -Name ssh-agent | Set-Service -StartupType Manual")
+            print("3. 运行: Start-Service ssh-agent")
+            print("4. 手动运行: ssh-add ~/.ssh/id_rsa")
+            
+    except subprocess.TimeoutExpired:
+        print("SSH agent操作超时，请手动配置")
+    except subprocess.CalledProcessError as e:
+        print(f"SSH添加密钥失败: {e}")
     except Exception as e:
-        print(f"SSH agent设置失败: {e}")
+        print(f"SSH agent设置过程中出错: {e}")
 
 
 def add_git_to_path():
