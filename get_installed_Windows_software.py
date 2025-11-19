@@ -44,6 +44,7 @@ def get_windows_software():
             for software in software_data:
                 if software.get('DisplayName'):
                     software_list.append({
+                        'type': '传统软件',
                         'name': software.get('DisplayName', ''),
                         'version': software.get('DisplayVersion', ''),
                         'publisher': software.get('Publisher', ''),
@@ -74,6 +75,7 @@ def get_windows_store_apps():
             for app in apps_data:
                 if app.get('Name'):
                     store_apps.append({
+                        'type': '应用商店应用',
                         'name': app.get('Name', ''),
                         'version': app.get('Version', ''),
                         'package_name': app.get('PackageFullName', '')
