@@ -166,6 +166,12 @@ def main():
     if args.export:
         filename = f"{args.output}.{args.export}"
         export_to_file(filtered_software, filename, args.export)
+    
+    # 如果没有指定导出格式，但用户想要JSON，可以自动生成一个
+    if not args.export and len(filtered_software) > 0:
+        json_filename = f"{args.output}.json"
+        export_to_file(filtered_software, json_filename, 'json')
+        print(f"\n数据已自动导出到JSON文件: {json_filename}")
 
 if __name__ == "__main__":
     main()
