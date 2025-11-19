@@ -11,6 +11,7 @@ import json
 import re
 from datetime import datetime
 import argparse
+import os
 
 def get_windows_software():
     """获取Windows系统安装的软件信息"""
@@ -99,11 +100,19 @@ def filter_software(software_list, filters):
 def export_to_file(software_list, filename, format_type='txt'):
     """导出软件列表到文件"""
     try:
+        # 创建JSON文件夹（如果不存在）
+        json_dir = "JSON"
+        if not os.path.exists(json_dir):
+            os.makedirs(json_dir)
+        
+        # 构建完整文件路径
+        full_path = os.path.join(json_dir, filename)
+        
         if format_type == 'json':
-            with open(filename, 'w', encoding='utf-8') as f:
+            with open(full_path, 'w', encoding='utf-8') as f:
                 json.dump(software_list, f, ensure_ascii=False, indent=2)
         else:
-            with open(filename, 'w', encoding='utf-8') as f:
+            with open(full_path, 'w', encoding='utf-8') as f:
                 f.write(f"软件列表导出时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
                 f.write("=" * 60 + "\n")
                 
@@ -115,7 +124,7 @@ def export_to_file(software_list, filename, format_type='txt'):
                         f.write(f"   安装日期: {software.get('install_date')}\n")
                     f.write("-" * 40 + "\n")
         
-        print(f"软件列表已导出到: {filename}")
+        print(f"软件列表已导出到: {full_path}")
         
     except Exception as e:
         print(f"导出文件时出错: {e}")
@@ -162,13 +171,12 @@ def main():
             print(f"   安装日期: {software.get('install_date')}")
         print("-" * 60)
     
-    # 导出到文件
+    # 导出到文件 - 默认自动输出JSON
     if args.export:
         filename = f"{args.output}.{args.export}"
         export_to_file(filtered_software, filename, args.export)
-    
-    # 如果没有指定导出格式，但用户想要JSON，可以自动生成一个
-    if not args.export and len(filtered_software) > 0:
+    else:
+        # 默认自动输出JSON文件
         json_filename = f"{args.output}.json"
         export_to_file(filtered_software, json_filename, 'json')
         print(f"\n数据已自动导出到JSON文件: {json_filename}")

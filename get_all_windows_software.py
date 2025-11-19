@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Windows系统完整软件信息获取工具
-项目名称项目组Seraphiel 作者 TraeAI 邮箱 - 日期 2025-11-19 版本 2.0
+项目名称项目组Seraphiel 作者 TraeAI  - 日期 2025-11-19 版本 2.0
 描述: 获取Windows系统安装的所有软件信息（包括传统软件、应用商店应用、系统组件等）
 """
 
@@ -210,11 +210,19 @@ def filter_software(all_software, filters):
 def export_results(data, filename, format_type='txt'):
     """导出结果到文件"""
     try:
+        # 创建JSON文件夹（如果不存在）
+        json_dir = "JSON"
+        if not os.path.exists(json_dir):
+            os.makedirs(json_dir)
+        
+        # 构建完整文件路径
+        full_path = os.path.join(json_dir, filename)
+        
         if format_type == 'json':
-            with open(filename, 'w', encoding='utf-8') as f:
+            with open(full_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
         else:
-            with open(filename, 'w', encoding='utf-8') as f:
+            with open(full_path, 'w', encoding='utf-8') as f:
                 f.write(f"Windows系统软件信息报告\n")
                 f.write(f"生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
                 f.write("=" * 80 + "\n\n")
@@ -241,7 +249,7 @@ def export_results(data, filename, format_type='txt'):
                         f.write("\n")
                     f.write("\n")
         
-        print(f"结果已导出到: {os.path.abspath(filename)}")
+        print(f"结果已导出到: {os.path.abspath(full_path)}")
         
     except Exception as e:
         print(f"导出文件时出错: {e}")
@@ -307,10 +315,15 @@ def main():
     if filters:
         print(f"过滤后结果: {len(filtered_data)}个")
     
-    # 导出结果
+    # 导出结果 - 默认自动输出JSON
     if args.export:
         filename = f"{args.output}.{args.export}"
         export_results(filtered_data if filters else all_software, filename, args.export)
+    else:
+        # 默认自动输出JSON文件
+        json_filename = f"{args.output}.json"
+        export_results(filtered_data if filters else all_software, json_filename, 'json')
+        print(f"\n数据已自动导出到JSON文件: {json_filename}")
     
     # 显示所有结果
     if filtered_data:
