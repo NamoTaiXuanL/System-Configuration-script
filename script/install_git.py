@@ -72,9 +72,41 @@ def check_git_installed():
         return False
 
 
+def check_git_configured():
+    """检查Git是否已配置用户名和邮箱"""
+    try:
+        # 检查用户名
+        result_name = subprocess.run(['git', 'config', '--global', 'user.name'], 
+                                   capture_output=True, text=True, timeout=5)
+        # 检查邮箱
+        result_email = subprocess.run(['git', 'config', '--global', 'user.email'], 
+                                    capture_output=True, text=True, timeout=5)
+        
+        # 两者都存在且不为空
+        return (result_name.returncode == 0 and result_name.stdout.strip() and
+                result_email.returncode == 0 and result_email.stdout.strip())
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return False
+
+
+def check_ssh_key_exists():
+    """检查SSH密钥是否已存在"""
+    ssh_dir = os.path.join(os.path.expanduser('~'), '.ssh')
+    private_key = os.path.join(ssh_dir, 'id_rsa')
+    public_key = os.path.join(ssh_dir, 'id_rsa.pub')
+    
+    # 检查私钥和公钥文件是否存在
+    return os.path.exists(private_key) and os.path.exists(public_key)
+
+
 def configure_git():
     """配置Git用户名和邮箱"""
     print("\n=== Git配置 ===")
+    
+    # 检查是否已配置
+    if check_git_configured():
+        print("Git用户名和邮箱已配置，跳过")
+        return
     
     # 询问用户是否要配置
     choice = input("是否要配置Git用户名和邮箱? (y/n, 默认y): ").strip().lower()
@@ -100,6 +132,21 @@ def configure_git():
 def generate_ssh_key():
     """生成SSH密钥"""
     print("\n=== SSH密钥配置 ===")
+    
+    # 检查是否已存在SSH密钥
+    if check_ssh_key_exists():
+        print("SSH密钥已存在，跳过生成")
+        # 读取现有公钥内容
+        pub_key_file = os.path.join(os.path.expanduser('~'), '.ssh', 'id_rsa.pub')
+        if os.path.exists(pub_key_file):
+            with open(pub_key_file, 'r') as f:
+                public_key = f.read().strip()
+            print(f"\n现有公钥内容:")
+            print("=" * 50)
+            print(public_key)
+            print("=" * 50)
+            return public_key
+        return None
     
     # 询问用户是否要生成SSH密钥
     choice = input("是否要生成SSH密钥? (y/n, 默认y): ").strip().lower()
