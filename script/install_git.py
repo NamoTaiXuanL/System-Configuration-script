@@ -225,8 +225,10 @@ def setup_ssh_agent():
             
             if result4.returncode == 0:
                 print("SSH agent设置完成，密钥已添加")
+                return True
             else:
                 print("SSH密钥添加失败，请手动运行: ssh-add ~/.ssh/id_rsa")
+                return False
         else:
             # 如果服务启动失败，提供详细的手动指导
             print("SSH agent服务启动失败，请手动执行以下PowerShell命令:")
@@ -234,13 +236,48 @@ def setup_ssh_agent():
             print("2. 启动服务: Start-Service ssh-agent")
             print("3. 检查服务状态: Get-Service ssh-agent")
             print("4. 添加SSH密钥: ssh-add ~/.ssh/id_rsa")
+            return False
             
     except subprocess.TimeoutExpired:
         print("SSH agent操作超时，请手动配置")
+        return False
     except subprocess.CalledProcessError as e:
         print(f"SSH agent设置失败: {e}")
+        return False
     except Exception as e:
         print(f"SSH agent设置过程中出错: {e}")
+        return False
+
+
+def test_github_connection():
+    """测试GitHub SSH连接"""
+    print("\n=== 测试GitHub SSH连接 ===")
+    
+    try:
+        # 测试SSH连接到GitHub
+        result = subprocess.run([
+            'ssh', '-T', 'git@github.com'
+        ], capture_output=True, text=True, timeout=15)
+        
+        if result.returncode == 1:
+            # GitHub SSH连接成功（返回码1表示成功连接但拒绝shell访问）
+            print("GitHub SSH连接测试成功!")
+            print("提示: GitHub成功验证了您的SSH密钥，但拒绝了交互式shell访问（这是正常的）")
+            return True
+        else:
+            print(f"GitHub连接测试失败，返回码: {result.returncode}")
+            print(f"错误输出: {result.stderr}")
+            return False
+            
+    except subprocess.TimeoutExpired:
+        print("GitHub连接测试超时")
+        return False
+    except subprocess.CalledProcessError as e:
+        print(f"GitHub连接测试失败: {e}")
+        return False
+    except Exception as e:
+        print(f"GitHub连接测试过程中出错: {e}")
+        return False
 
 
 def add_git_to_path():
@@ -274,7 +311,26 @@ def main():
         print("Git已经安装")
         # 即使已安装，也提供配置选项
         configure_git()
-        generate_ssh_key()
+        public_key = generate_ssh_key()
+        if public_key:
+            if setup_ssh_agent():
+                # 询问是否要测试GitHub连接
+                print("\n=== GitHub SSH配置 ===")
+                choice = input("是否要测试GitHub SSH连接并添加密钥到GitHub? (y/n, 默认y): ").strip().lower()
+                if choice != 'n':
+                    print("\n请将以下公钥添加到GitHub:")
+                    print("1. 访问: https://github.com/settings/keys")
+                    print("2. 点击'New SSH key'")
+                    print("3. 粘贴以下公钥内容:")
+                    print("=" * 60)
+                    print(public_key)
+                    print("=" * 60)
+                    
+                    # 等待用户确认已添加
+                    input("按回车键继续测试GitHub连接...")
+                    
+                    # 测试GitHub连接
+                    test_github_connection()
         return True
     
     # 下载安装程序
@@ -292,7 +348,24 @@ def main():
         configure_git()
         public_key = generate_ssh_key()
         if public_key:
-            setup_ssh_agent()
+            if setup_ssh_agent():
+                # 询问是否要测试GitHub连接
+                print("\n=== GitHub SSH配置 ===")
+                choice = input("是否要测试GitHub SSH连接并添加密钥到GitHub? (y/n, 默认y): ").strip().lower()
+                if choice != 'n':
+                    print("\n请将以下公钥添加到GitHub:")
+                    print("1. 访问: https://github.com/settings/keys")
+                    print("2. 点击'New SSH key'")
+                    print("3. 粘贴以下公钥内容:")
+                    print("=" * 60)
+                    print(public_key)
+                    print("=" * 60)
+                    
+                    # 等待用户确认已添加
+                    input("按回车键继续测试GitHub连接...")
+                    
+                    # 测试GitHub连接
+                    test_github_connection()
     
     # 清理临时文件
     try:
