@@ -196,33 +196,49 @@ def generate_ssh_key():
 def setup_ssh_agent():
     """设置SSH agent - Windows专用版本"""
     try:
-        # Windows系统通常使用OpenSSH自带的ssh-agent
-        # 首先尝试启动ssh-agent
-        result = subprocess.run(['ssh-agent', '-s'], capture_output=True, text=True, timeout=10)
+        # Windows系统使用服务方式启动ssh-agent
+        print("正在设置SSH agent服务...")
         
-        if result.returncode == 0:
-            # 解析ssh-agent的输出，设置环境变量
-            for line in result.stdout.split(';'):
-                if 'SSH_AUTH_SOCK' in line or 'SSH_AGENT_PID' in line:
-                    key, value = line.strip().split('=', 1)
-                    os.environ[key] = value
+        # 1. 设置服务为手动启动
+        result1 = subprocess.run([
+            'powershell', '-Command', 
+            'Set-Service -Name ssh-agent -StartupType Manual'
+        ], capture_output=True, text=True, timeout=10)
+        
+        # 2. 启动ssh-agent服务
+        result2 = subprocess.run([
+            'powershell', '-Command', 
+            'Start-Service ssh-agent'
+        ], capture_output=True, text=True, timeout=10)
+        
+        # 3. 检查服务状态
+        result3 = subprocess.run([
+            'powershell', '-Command', 
+            'Get-Service ssh-agent | Select-Object Status'
+        ], capture_output=True, text=True, timeout=10)
+        
+        if result2.returncode == 0 and 'Running' in result3.stdout:
+            # 4. 添加SSH密钥到agent
+            result4 = subprocess.run([
+                'ssh-add', os.path.join(os.path.expanduser('~'), '.ssh', 'id_rsa')
+            ], capture_output=True, text=True, timeout=10)
             
-            # 添加密钥到agent
-            subprocess.run(['ssh-add', os.path.join(os.path.expanduser('~'), '.ssh', 'id_rsa')], 
-                         check=True, timeout=10)
-            print("SSH agent设置完成")
+            if result4.returncode == 0:
+                print("SSH agent设置完成，密钥已添加")
+            else:
+                print("SSH密钥添加失败，请手动运行: ssh-add ~/.ssh/id_rsa")
         else:
-            # 如果ssh-agent启动失败，提供手动指导
-            print("SSH agent启动失败，Windows系统可能需要手动设置:")
-            print("1. 确保OpenSSH Authentication Agent服务已启用")
-            print("2. 运行: Get-Service -Name ssh-agent | Set-Service -StartupType Manual")
-            print("3. 运行: Start-Service ssh-agent")
-            print("4. 手动运行: ssh-add ~/.ssh/id_rsa")
+            # 如果服务启动失败，提供详细的手动指导
+            print("SSH agent服务启动失败，请手动执行以下PowerShell命令:")
+            print("1. 设置服务启动类型: Set-Service -Name ssh-agent -StartupType Manual")
+            print("2. 启动服务: Start-Service ssh-agent")
+            print("3. 检查服务状态: Get-Service ssh-agent")
+            print("4. 添加SSH密钥: ssh-add ~/.ssh/id_rsa")
             
     except subprocess.TimeoutExpired:
         print("SSH agent操作超时，请手动配置")
     except subprocess.CalledProcessError as e:
-        print(f"SSH添加密钥失败: {e}")
+        print(f"SSH agent设置失败: {e}")
     except Exception as e:
         print(f"SSH agent设置过程中出错: {e}")
 
