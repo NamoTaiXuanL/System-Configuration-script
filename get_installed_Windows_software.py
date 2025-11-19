@@ -16,43 +16,56 @@ def get_windows_software():
     """获取Windows系统安装的软件信息"""
     software_list = []
     
-    # 使用PowerShell获取注册表中的软件信息
-    powershell_cmd = [
-        "Get-ItemProperty", 
+    # 所有可能的注册表路径
+    registry_paths = [
         "HKLM:\\Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*",
-        "|", "Select-Object", "DisplayName, DisplayVersion, Publisher, InstallDate",
-        "|", "Where-Object", "{$_.DisplayName -ne $null}",
-        "|", "ConvertTo-Json"
+        "HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*",
+        "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*"
     ]
     
-    try:
-        # 执行PowerShell命令
-        result = subprocess.run(
-            ["powershell", "-Command", " ".join(powershell_cmd)],
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
-        
-        if result.returncode == 0 and result.stdout.strip():
-            software_data = json.loads(result.stdout)
+    for registry_path in registry_paths:
+        try:
+            # 使用PowerShell获取注册表中的软件信息
+            powershell_cmd = [
+                "Get-ItemProperty", 
+                registry_path,
+                "|", "Select-Object", "DisplayName, DisplayVersion, Publisher, InstallDate",
+                "|", "Where-Object", "{$_.DisplayName -ne $null}",
+                "|", "ConvertTo-Json"
+            ]
             
-            # 处理单个或多个软件条目
-            if isinstance(software_data, dict):
-                software_data = [software_data]
+            # 执行PowerShell命令
+            result = subprocess.run(
+                ["powershell", "-Command", " ".join(powershell_cmd)],
+                capture_output=True,
+                text=True,
+                timeout=20
+            )
             
-            for software in software_data:
-                if software.get('DisplayName'):
-                    software_list.append({
-                        'type': '传统软件',
-                        'name': software.get('DisplayName', ''),
-                        'version': software.get('DisplayVersion', ''),
-                        'publisher': software.get('Publisher', ''),
-                        'install_date': software.get('InstallDate', '')
-                    })
-        
-    except (subprocess.TimeoutExpired, json.JSONDecodeError, subprocess.SubprocessError) as e:
-        print(f"获取软件信息时出错: {e}")
+            if result.returncode == 0 and result.stdout.strip():
+                software_data = json.loads(result.stdout)
+                
+                # 处理单个或多个软件条目
+                if isinstance(software_data, dict):
+                    software_data = [software_data]
+                
+                for software in software_data:
+                    if software.get('DisplayName'):
+                        software_info = {
+                            'type': '传统软件',
+                            'name': software.get('DisplayName', ''),
+                            'version': software.get('DisplayVersion', ''),
+                            'publisher': software.get('Publisher', ''),
+                            'install_date': software.get('InstallDate', '')
+                        }
+                        # 避免重复添加相同的软件
+                        if software_info not in software_list:
+                            software_list.append(software_info)
+            
+        except (subprocess.TimeoutExpired, json.JSONDecodeError, subprocess.SubprocessError) as e:
+            print(f"获取注册表路径 {registry_path} 时出错: {e}")
+        except Exception as e:
+            print(f"处理注册表路径 {registry_path} 时发生未知错误: {e}")
     
     return software_list
 
