@@ -25,7 +25,7 @@ def get_software_install_path(software_name):
             cmd = [
                 "powershell", "-Command",
                 f"Get-ItemProperty '{registry_path}' | "
-                f"Where-Object {{$_.DisplayName -like '*{software_name}*'}} | "
+                f"Where-Object DisplayName -like '*{software_name}*' | "
                 f"Select-Object DisplayName, InstallLocation, UninstallString | "
                 f"ConvertTo-Json"
             ]
@@ -33,19 +33,26 @@ def get_software_install_path(software_name):
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             
             if result.returncode == 0 and result.stdout.strip():
-                data = json.loads(result.stdout)
-                if isinstance(data, dict):
-                    data = [data]
-                
-                for item in data:
-                    if item.get('DisplayName') and item.get('InstallLocation'):
-                        return {
-                            'name': item.get('DisplayName', ''),
-                            'install_path': item.get('InstallLocation', ''),
-                            'uninstall_string': item.get('UninstallString', '')
-                        }
+                try:
+                    data = json.loads(result.stdout)
+                    if isinstance(data, dict):
+                        data = [data]
+                    
+                    for item in data:
+                        if item.get('DisplayName') and item.get('InstallLocation'):
+                            return {
+                                'name': item.get('DisplayName', ''),
+                                'install_path': item.get('InstallLocation', ''),
+                                'uninstall_string': item.get('UninstallString', '')
+                            }
+                except json.JSONDecodeError:
+                    # 输出可能不是有效的JSON，尝试直接解析
+                    if software_name.lower() in result.stdout.lower():
+                        print(f"找到匹配项但JSON解析失败: {result.stdout}")
+                    continue
         
-        except Exception:
+        except Exception as e:
+            print(f"搜索注册表路径 {registry_path} 时出错: {e}")
             continue
     
     return None
@@ -57,7 +64,7 @@ def get_store_app_path(app_name):
         cmd = [
             "powershell", "-Command",
             f"Get-AppxPackage | "
-            f"Where-Object {{$_.Name -like '*{app_name}*'}} | "
+            f"Where-Object Name -like '*{app_name}*' | "
             f"Select-Object Name, InstallLocation | "
             f"ConvertTo-Json"
         ]
