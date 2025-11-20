@@ -90,6 +90,19 @@ def find_npm_cmd():
             return c
     return "npm"
 
+def find_claude_cmd():
+    candidates = [
+        os.path.join(get_roaming_npm_path(), "claude.cmd"),
+        os.path.join(get_roaming_npm_path(), "claude.ps1"),
+        "claude",
+    ]
+    for c in candidates:
+        if c == "claude":
+            return c
+        if os.path.exists(c):
+            return c
+    return "claude"
+
 def install_claude_code():
     print("安装 Claude Code...")
     try:
@@ -106,7 +119,19 @@ def install_claude_code():
         if ir.returncode != 0:
             print("Claude Code 安装失败")
             return False
-        vr = subprocess.run("claude --version", capture_output=True, text=True, shell=True)
+        ensure_node_path()
+        print("尝试定位 claude 命令...")
+        try:
+            loc = subprocess.run("where claude", capture_output=True, text=True, shell=True)
+            if loc.stdout.strip():
+                print(loc.stdout.strip())
+        except Exception:
+            pass
+        claude_cmd = find_claude_cmd()
+        if os.path.exists(claude_cmd):
+            vr = subprocess.run([claude_cmd, "--version"], capture_output=True, text=True)
+        else:
+            vr = subprocess.run("claude --version", capture_output=True, text=True, shell=True)
         if vr.returncode == 0:
             print(f"Claude Code 版本: {vr.stdout.strip()}")
             return True
