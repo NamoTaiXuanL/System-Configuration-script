@@ -3,3 +3,5 @@ AGENTS/
 TESTS/
 
 *.json
+CLAUDE.md
+.gitignore
