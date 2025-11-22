@@ -32,13 +32,14 @@ def install_context_menu():
 def copy_path_to_clipboard(file_path):
     """复制路径到剪贴板"""
     try:
-        # 使用Windows内置的echo和clip命令
-        subprocess.run(['cmd', '/c', f'echo "{file_path}"|clip'], check=True,
+        # 使用cmd直接复制，不加引号
+        subprocess.run(['cmd', '/c', f'echo {file_path}|clip'], check=True,
                       creationflags=subprocess.CREATE_NO_WINDOW)
     except:
-        # 如果clip命令失败，使用PowerShell
-        subprocess.run(['powershell', '-command', f'Set-Clipboard -Value "{file_path}"'],
-                      check=True, creationflags=subprocess.CREATE_NO_WINDOW)
+        # 备用PowerShell，隐藏窗口
+        subprocess.run(['powershell', '-windowstyle', 'hidden', '-command',
+                       f'Set-Clipboard -Value {file_path}'],
+                      creationflags=subprocess.CREATE_NO_WINDOW)
 
 def main():
     if len(sys.argv) > 1:
