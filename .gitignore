@@ -5,3 +5,4 @@ TESTS/
 *.json
 CLAUDE.md
 .gitignore
+linux/package/Python-3.13.0.tgz
