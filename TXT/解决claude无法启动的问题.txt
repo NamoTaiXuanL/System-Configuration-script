@@ -1,0 +1,32 @@
+PowerShell的“执行策略”（Execution Policy）默认为 Restricted，即“限制模式”，在这个模式下系统不允许运行任何.ps1脚本。你运行claude命令时触发的正是这个安全机制。你可以通过以下命令确认当前策略：
+
+Get-ExecutionPolicy
+
+
+PS C:\Users\ROOT> claude
+claude : 无法加载文件 C:\Users\ROOT\AppData\Roaming\npm\claude.ps1，因为在此系统上禁止运行脚本。有关详细信息，请参阅 ht
+tps:/go.microsoft.com/fwlink/?LinkID=135170 中的 about_Execution_Policies。
+所在位置 行:1 字符: 1
++ claude
++ ~~~~~~
+    + CategoryInfo          : SecurityError: (:) []，PSSecurityException
+    + FullyQualifiedErrorId : UnauthorizedAccess
+
+
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+
+
+
+修改为 RemoteSigned（推荐）
+RemoteSigned 策略是最平衡的选择，它允许运行所有本地脚本，但要求从网络下载的脚本必须有可信的数字签名，兼顾了便利和安全。
+
+以管理员身份运行 PowerShell。右键点击“开始”菜单中的“Windows PowerShell”，选择“以管理员身份运行”。
+
+设置策略。为安全起见，建议只修改当前用户的策略，不影响其他账户：
+
+powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+系统会询问你是否确认，输入 Y 并按回车即可。
+
+完成设置后，重新打开普通的PowerShell窗口，再次尝试运行 claude 命令，应该就能成功了。
+
