@@ -51,7 +51,7 @@ class SystemConfigInstaller:
         git_check.grid(row=3, column=0, sticky="w", padx=10, pady=5)
         
         # 进度条
-        self.progress = ttk.Progressbar(self.root, mode="indeterminate")
+        self.progress = ttk.Progressbar(self.root, mode="determinate")
         self.progress.pack(pady=20, padx=20, fill="x")
         
         # 状态标签
@@ -80,8 +80,10 @@ class SystemConfigInstaller:
         # 禁用安装按钮
         self.root.winfo_children()[-1].winfo_children()[0].config(state="disabled")
         
-        # 开始进度条动画
-        self.progress.start()
+        # 重置进度条
+        self.progress["value"] = 0
+        self.progress["maximum"] = self.count_selected_tasks()
+        
         self.status_label.config(text="正在安装...")
         
         # 在新线程中执行安装

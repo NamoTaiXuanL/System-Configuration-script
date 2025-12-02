@@ -1,6 +1,7 @@
 __pycache__
 AGENTS/
 TESTS/
+SystemConfigInstaller/
 
 *.json
 CLAUDE.md
