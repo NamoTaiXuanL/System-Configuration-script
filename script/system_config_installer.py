@@ -50,13 +50,9 @@ class SystemConfigInstaller:
         git_check = ttk.Checkbutton(options_frame, text="安装 Git", variable=self.git_var)
         git_check.grid(row=3, column=0, sticky="w", padx=10, pady=5)
         
-        # 进度条
-        self.progress = ttk.Progressbar(self.root, mode="determinate")
-        self.progress.pack(pady=20, padx=20, fill="x")
-        
         # 状态标签
-        self.status_label = ttk.Label(self.root, text="准备就绪")
-        self.status_label.pack(pady=5)
+        self.status_label = ttk.Label(self.root, text="准备就绪", font=("Arial", 10))
+        self.status_label.pack(pady=20)
         
         # 按钮框架
         button_frame = ttk.Frame(self.root)
@@ -80,10 +76,6 @@ class SystemConfigInstaller:
         # 禁用安装按钮
         self.root.winfo_children()[-1].winfo_children()[0].config(state="disabled")
         
-        # 重置进度条
-        self.progress["value"] = 0
-        self.progress["maximum"] = self.count_selected_tasks()
-        
         self.status_label.config(text="正在安装...")
         
         # 在新线程中执行安装
@@ -93,18 +85,28 @@ class SystemConfigInstaller:
         
     def run_installation(self):
         try:
+            completed_tasks = 0
+            
             # 执行选中的安装任务
             if self.python_var.get():
                 self.install_python()
+                completed_tasks += 1
+                self.update_progress(completed_tasks)
                 
             if self.powershell_var.get():
                 self.fix_powershell_policy()
+                completed_tasks += 1
+                self.update_progress(completed_tasks)
                 
             if self.claude_var.get():
                 self.install_claude_glm()
+                completed_tasks += 1
+                self.update_progress(completed_tasks)
                 
             if self.git_var.get():
                 self.install_git()
+                completed_tasks += 1
+                self.update_progress(completed_tasks)
                 
             # 安装完成
             self.root.after(0, self.installation_complete)
@@ -136,13 +138,11 @@ class SystemConfigInstaller:
         self.root.after(0, lambda: self.status_label.config(text=message))
     
     def installation_complete(self):
-        self.progress.stop()
         self.status_label.config(text="安装完成！")
         self.root.winfo_children()[-1].winfo_children()[0].config(state="normal")
         messagebox.showinfo("完成", "所有选中的安装任务已完成")
     
     def installation_failed(self, error_message):
-        self.progress.stop()
         self.status_label.config(text="安装失败")
         self.root.winfo_children()[-1].winfo_children()[0].config(state="normal")
         messagebox.showerror("错误", f"安装过程中出现错误:\n{error_message}")
