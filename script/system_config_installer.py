@@ -117,22 +117,22 @@ class SystemConfigInstaller:
     def install_python(self):
         self.update_status("正在安装 Python 3.14.0...")
         script_path = os.path.join(os.path.dirname(__file__), "install_python.bat")
-        subprocess.run([script_path], check=True, shell=True)
+        subprocess.run([script_path], check=True, shell=True, creationflags=subprocess.CREATE_NEW_CONSOLE)
     
     def fix_powershell_policy(self):
         self.update_status("正在修复 PowerShell 执行策略...")
         script_path = os.path.join(os.path.dirname(__file__), "fix_powershell_policy.py")
-        subprocess.run(["python", script_path], check=True)
+        subprocess.run(["python", script_path], check=True, creationflags=subprocess.CREATE_NEW_CONSOLE)
     
     def install_claude_glm(self):
         self.update_status("正在安装 Claude Code + GLM...")
         script_path = os.path.join(os.path.dirname(__file__), "install_claude_glm.py")
-        subprocess.run(["python", script_path], check=True)
+        subprocess.run(["python", script_path], check=True, creationflags=subprocess.CREATE_NEW_CONSOLE)
     
     def install_git(self):
         self.update_status("正在安装 Git...")
         script_path = os.path.join(os.path.dirname(__file__), "install_git.py")
-        subprocess.run(["python", script_path], check=True)
+        subprocess.run(["python", script_path], check=True, creationflags=subprocess.CREATE_NEW_CONSOLE)
     
     def update_status(self, message):
         self.root.after(0, lambda: self.status_label.config(text=message))
