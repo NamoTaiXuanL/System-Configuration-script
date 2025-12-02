@@ -108,7 +108,8 @@ download_python_source() {
     local version="3.13.0"
     local url="https://www.python.org/ftp/python/$version/Python-$version.tgz"
     local temp_dir="/tmp/python_install"
-    local script_dir="$(dirname "$(realpath "$0")")"
+    # 获取脚本所在目录（兼容Windows和Linux）
+    local script_dir="$(cd "$(dirname "$0")" && pwd)"
     local local_package="$script_dir/Python-$version.tgz"
     
     log_info "创建临时目录: $temp_dir"
@@ -116,6 +117,9 @@ download_python_source() {
     cd "$temp_dir"
     
     # 首先检查脚本所在目录是否有本地包
+    log_info "检查脚本目录: $script_dir"
+    log_info "本地包路径: $local_package"
+    
     if [[ -f "$local_package" ]]; then
         log_info "发现本地Python安装包: $local_package"
         log_info "使用本地包进行安装..."
