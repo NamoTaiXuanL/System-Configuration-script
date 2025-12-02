@@ -116,11 +116,16 @@ download_python_source() {
     mkdir -p "$temp_dir"
     cd "$temp_dir"
     
-    # 首先检查脚本所在目录是否有本地包
-    log_info "检查脚本目录: $script_dir"
-    log_info "本地包路径: $local_package"
-    
-    if [[ -f "$local_package" ]]; then
+    # 首先检查脚本所在目录的package子目录是否有本地包
+    local package_dir="$script_dir/package"
+    local package_in_dir="$package_dir/Python-$version.tgz"
+
+    if [[ -f "$package_in_dir" ]]; then
+        log_info "发现本地Python安装包: $package_in_dir"
+        log_info "使用本地包进行安装..."
+        cp "$package_in_dir" .
+        log_success "本地包复制完成"
+    elif [[ -f "$local_package" ]]; then
         log_info "发现本地Python安装包: $local_package"
         log_info "使用本地包进行安装..."
         cp "$local_package" .
