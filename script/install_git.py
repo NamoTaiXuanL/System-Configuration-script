@@ -19,11 +19,17 @@ def download_git_installer():
     
     # 下载文件
     try:
-        urllib.request.urlretrieve(git_url, installer_path)
-        print(f"下载完成: {installer_path}")
+        def progress_callback(block_num, block_size, total_size):
+            downloaded = block_num * block_size
+            if total_size > 0:
+                percent = min(100, int(downloaded * 100 / total_size))
+                print(f"\r下载进度: {percent}% [{downloaded}/{total_size} bytes]", end="", flush=True)
+        
+        urllib.request.urlretrieve(git_url, installer_path, progress_callback)
+        print(f"\n下载完成: {installer_path}")
         return installer_path
     except Exception as e:
-        print(f"下载失败: {e}")
+        print(f"\n下载失败: {e}")
         return None
 
 
@@ -337,6 +343,16 @@ def main():
     installer_path = download_git_installer()
     if not installer_path:
         return False
+    
+    # 检查下载是否完成并自动进入安装
+    if installer_path and os.path.exists(installer_path):
+        file_size = os.path.getsize(installer_path)
+        print(f"下载验证: 文件大小 {file_size} bytes")
+        if file_size > 0:
+            print("下载完成，开始自动安装...")
+        else:
+            print("下载文件为空，安装中止")
+            return False
     
     # 安装Git
     success = install_git(installer_path)
