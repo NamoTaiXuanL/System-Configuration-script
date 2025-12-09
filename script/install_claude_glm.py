@@ -23,13 +23,20 @@ def is_node_installed(min_major=18):
 def download_node_installer(version="20.17.0"):
     print("下载 Node.js 安装程序...")
     url = f"https://nodejs.org/dist/v{version}/node-v{version}-x64.msi"
-    path = os.path.join(tempfile.gettempdir(), f"node-v{version}-x64.msi")
+    path = os.path.join(tempfile.gettempdir(), f"node-v{version}version-x64.msi")
     try:
-        urllib.request.urlretrieve(url, path)
-        print(f"下载完成: {path}")
+
+        def progress_callback(block_num, block_size, total_size):
+            downloaded = block_num * block_size
+            if total_size > 0:
+                percent = min(100, int(downloaded * 100 / total_size))
+                print(f"\r下载进度: {percent}% [{downloaded}/{total_size} bytes]", end="", flush=True)
+        
+        urllib.request.urlretrieve(url, path, progress_callback)
+        print(f"\n下载完成: {path}")
         return path
     except Exception as e:
-        print(f"下载失败: {e}")
+        print(f"\n下载失败: {e}")
         return None
 
 def install_node(msi_path):
@@ -190,10 +197,20 @@ def main():
     node_ok = is_node_installed()
     if not node_ok:
         msi = download_node_installer()
-        if msi and install_node(msi):
-            ensure_node_path()
+        # 检查下载是否完成并自动进入安装
+        if msi and os.path.exists(msi):
+            file_size = os.path.getsize(msi)
+            print(f"下载验证: 文件大小 {file_size} bytes")
+            if file_size > 0:
+                print("下载完成，开始自动安装...")
+                if install_node(msi):
+                    ensure_node_path()
+                else:
+                    print("Node.js 安装失败，请以管理员身份重试")
+            else:
+                print("下载文件为空，安装中止")
         else:
-            print("Node.js 安装失败，请以管理员身份重试")
+            print("Node.js 下载失败，请检查网络连接")
 
     run_git_setup()
 
