@@ -220,12 +220,12 @@ install_claude_code() {
     fi
 }
 
-# 配置GLM环境变量
-configure_glm_env() {
+# 配置DeepSeek环境变量
+configure_deepseek_env() {
     local api_key=""
-    local base_url="https://open.bigmodel.cn/api/anthropic"
+    local base_url="https://api.deepseek.com/anthropic"
 
-    log_info "配置 GLM 环境变量..."
+    log_info "配置 DeepSeek 环境变量..."
 
     # 设置ANTHROPIC_BASE_URL
     if ! grep -q "ANTHROPIC_BASE_URL" ~/.bashrc; then
@@ -236,7 +236,7 @@ configure_glm_env() {
     fi
 
     # 获取API Key
-    read -p "请输入智谱 API Key(留空跳过): " api_key
+    read -p "请输入 DeepSeek API Key(留空跳过): " api_key
     api_key=$(echo "$api_key" | tr -d '[:space:]')
 
     if [[ -n "$api_key" ]]; then
@@ -250,22 +250,60 @@ configure_glm_env() {
         log_info "未提供 API Key，跳过设置 ANTHROPIC_AUTH_TOKEN"
     fi
 
+    # 设置其他DeepSeek相关环境变量
+    if ! grep -q "API_TIMEOUT_MS" ~/.bashrc; then
+        echo "export API_TIMEOUT_MS=600000" >> ~/.bashrc
+        log_info "已设置 API_TIMEOUT_MS=600000"
+    fi
+    
+    if ! grep -q "ANTHROPIC_MODEL" ~/.bashrc; then
+        echo "export ANTHROPIC_MODEL=deepseek-chat" >> ~/.bashrc
+        log_info "已设置 ANTHROPIC_MODEL=deepseek-chat"
+    fi
+    
+    if ! grep -q "ANTHROPIC_SMALL_FAST_MODEL" ~/.bashrc; then
+        echo "export ANTHROPIC_SMALL_FAST_MODEL=deepseek-chat" >> ~/.bashrc
+        log_info "已设置 ANTHROPIC_SMALL_FAST_MODEL=deepseek-chat"
+    fi
+    
+    if ! grep -q "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC" ~/.bashrc; then
+        echo "export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1" >> ~/.bashrc
+        log_info "已设置 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1"
+    fi
+    
+    # 设置上下文token限制，避免超过DeepSeek上下文限制
+    if ! grep -q "ANTHROPIC_MAX_TOKENS" ~/.bashrc; then
+        echo "export ANTHROPIC_MAX_TOKENS=88000" >> ~/.bashrc
+        log_info "已设置 ANTHROPIC_MAX_TOKENS=88000 (上下文限制)"
+    fi
+    
+    if ! grep -q "ANTHROPIC_MAX_COMPLETION_TOKENS" ~/.bashrc; then
+        echo "export ANTHROPIC_MAX_COMPLETION_TOKENS=28000" >> ~/.bashrc
+        log_info "已设置 ANTHROPIC_MAX_COMPLETION_TOKENS=28000 (回复限制)"
+    fi
+
     # 应用环境变量到当前会话
     export ANTHROPIC_BASE_URL="$base_url"
+    export API_TIMEOUT_MS="600000"
+    export ANTHROPIC_MODEL="deepseek-chat"
+    export ANTHROPIC_SMALL_FAST_MODEL="deepseek-chat"
+    export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1"
+    export ANTHROPIC_MAX_TOKENS="88000"
+    export ANTHROPIC_MAX_COMPLETION_TOKENS="28000"
     if [[ -n "$api_key" ]]; then
         export ANTHROPIC_AUTH_TOKEN="$api_key"
     fi
 }
 
-# 引导GLM Coding Plan
-guide_glm_coding_plan() {
-    echo "\n=== GLM Coding Plan 引导 ==="
-    echo "1) 访问 https://open.bigmodel.cn 注册并获取 API Key"
-    echo "2) 参考文档: https://docs.bigmodel.cn/cn/guide/develop/claude"
+# 引导DeepSeek Coding Plan
+guide_deepseek_coding_plan() {
+    echo "\n=== DeepSeek Coding Plan 引导 ==="
+    echo "1) 访问 https://platform.deepseek.com 注册并获取 API Key"
+    echo "2) 参考文档: https://api-docs.deepseek.com/guides/anthropic_api"
     echo "3) 启动终端运行 'claude'，遇到提示选择使用该 API Key"
     echo "4) 支持的模型:"
-    echo "   - GLM-4.6 (默认用于复杂任务)"
-    echo "   - GLM-4.5-Air (轻量任务自动路由)"
+    echo "   - deepseek-chat (默认模型)"
+    echo "   - deepseek-chat (轻量任务自动路由)"
     echo "5) 配置位置: ~/.claude/settings.json"
     echo
 }
@@ -281,9 +319,9 @@ create_claude_config() {
         cat > "$config_file" << 'EOF'
 {
   "env": {
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-4.6",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-4.6"
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "deepseek-chat",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "deepseek-chat",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "deepseek-chat"
   }
 }
 EOF
@@ -371,7 +409,7 @@ main() {
         esac
     done
 
-    echo -e "${GREEN}=== Claude+GLM配置脚本 for Rocky Linux 10 ===${NC}"
+    echo -e "${GREEN}=== Claude+DeepSeek配置脚本 for Rocky Linux 10 ===${NC}"
     echo
 
     check_root
@@ -421,14 +459,14 @@ main() {
             # 安装Claude Code
             install_claude_code
 
-            # 配置GLM环境
-            configure_glm_env
+            # 配置DeepSeek环境
+            configure_deepseek_env
 
             # 创建配置文件
             create_claude_config
 
             # 显示引导信息
-            guide_glm_coding_plan
+            guide_deepseek_coding_plan
 
             # 验证安装
             verify_installation
