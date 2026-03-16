@@ -482,8 +482,8 @@ main() {
     echo "  4. 开始使用Claude Code进行开发"
     echo
     echo "支持的功能:"
-    echo "  - 对话/规划/代码编写/复杂推理 (GLM-4.6)"
-    echo "  - 轻量任务自动路由 (GLM-4.5-Air)"
+    echo "  - 对话/规划/代码编写/复杂推理 (deepseek-chat)"
+    echo "  - 轻量任务自动路由 (deepseek-chat)"
     echo "  - 视觉和搜索MCP服务器（需额外配置）"
 }
 
